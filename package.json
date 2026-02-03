@@ -1,0 +1,45 @@
+{
+  "name": "adkit-react",
+  "version": "0.1.0",
+  "description": "A drop-in React component for selling direct, bookable ads on your site — no AdSense required.",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "test": "echo \"No tests yet\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lucascampbell04/adkit-react.git"
+  },
+  "keywords": [
+    "react",
+    "react-component",
+    "ads",
+    "ad-slot",
+    "monetization",
+    "publisher",
+    "advertising",
+    "embed",
+    "widget",
+    "developer-tools",
+    "adkit"
+  ],
+  "author": "Adkit",
+  "license": "MIT",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/lucascampbell04/adkit-react/issues"
+  },
+  "homepage": "https://github.com/lucascampbell04/adkit-react#readme",
+  "peerDependencies": {
+    "react": ">=17"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.10",
+    "react": "^19.2.4",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3"
+  }
+}
