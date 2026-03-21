@@ -1,6 +1,6 @@
 {
   "name": "adkit-react",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A drop-in React component for selling direct, bookable ads on your site — no AdSense required.",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -35,7 +35,10 @@
     "adkit"
   ],
   "author": "Adkit",
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "license": "MIT",
   "type": "commonjs",
   "bugs": {
@@ -52,5 +55,7 @@
     "tsup": "^8.5.1",
     "typescript": "^5.9.3"
   },
-  "sideEffects": [ "*.css" ]
+  "sideEffects": [
+    "*.css"
+  ]
 }
