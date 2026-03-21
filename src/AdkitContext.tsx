@@ -4,7 +4,8 @@ import * as React from "react"
 
 export type AdkitContextValue = {
   siteId: string
-  // Slot registry for duplicate detection (per page render only)
+  refreshKey: number
+  refresh: () => void
   registerSlot: (identity: string) => boolean
   unregisterSlot: (identity: string) => void
 }

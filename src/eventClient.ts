@@ -1,26 +1,44 @@
-import type { AdkitEventType } from "./types"
+const API_URL = "https://adkit.dev/api/events"
 
-const API_URL = "http://track.localhost:3000"
-
-type SendEventPayload = {
-  type: AdkitEventType
-  siteId: string
-  slot: string
-  url: string
-  price?: number // in cents
-  aspectRatio?: string
-  viewport?: {
-    width: number
-    height: number
-  }
+type SlotViewClickPayload = {
+  type: "slot_view" | "slot_click"
+  slotId: string
+  bookingId?: string
+  pathname: string
+  viewport: string
 }
 
+type SlotMountPayload = {
+  type: "slot_mount"
+  siteId: string
+  slot: string
+  pathname: string
+  price?: number
+  aspectRatio: string
+}
+
+type SlotDuplicatePayload = {
+  type: "slot_duplicate"
+  siteId: string
+  slot: string
+  pathname: string
+}
+
+type SendEventPayload = SlotViewClickPayload | SlotMountPayload | SlotDuplicatePayload
+
 export function sendEvent(payload: SendEventPayload) {
+  const body = JSON.stringify({ ...payload, timestamp: Date.now() })
+
   try {
+    if (typeof navigator !== "undefined" && navigator.sendBeacon) {
+      const blob = new Blob([body], { type: "application/json" })
+      const sent = navigator.sendBeacon(API_URL, blob)
+      if (sent) return
+    }
     fetch(API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...payload, timestamp: Date.now() }),
+      body,
       keepalive: true
     }).catch(() => {})
   } catch {

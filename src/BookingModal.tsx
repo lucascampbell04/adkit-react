@@ -3,18 +3,17 @@
 import * as React from "react"
 
 /**
- * BookingModal — intentionally simple.
+ * BookingModal
  *
  * This modal is informational only. It exists to build trust with the visitor
- * before redirecting them to adkit.io where the actual booking flow lives.
- * No forms, no checkout, no data fetching — just copy and a redirect.
+ * before redirecting them to adkit.dev where the actual booking flow lives.
  */
 
 type BookingModalProps = {
   siteId: string
   slot: string
-  /** Daily price in cents (e.g. 2500 = $25) */
-  price: number
+  /** Daily price in cents (e.g. 2500 = $25). Undefined if server didn't return a price. */
+  price?: number
   onClose: () => void
 }
 
@@ -42,19 +41,20 @@ export function BookingModal({ siteId, slot, price, onClose }: BookingModalProps
     if (e.target === overlayRef.current) onClose()
   }
 
-  const dollars = price / 100
-  const formatted = Number.isInteger(dollars)
-    ? `$${dollars}`
-    : `$${dollars.toFixed(2)}`
+  const formatted = price != null
+    ? (() => {
+        const dollars = price / 100
+        return Number.isInteger(dollars) ? `$${dollars}` : `$${dollars.toFixed(2)}`
+      })()
+    : null
 
   const handleBook = () => {
     const params = new URLSearchParams({
       siteId,
       slot,
-      price: String(price),
       ref: window.location.href
     })
-    window.location.href = `https://adkit.io/book?${params.toString()}`
+    window.location.href = `https://adkit.dev/book?${params.toString()}`
   }
 
   return (
@@ -71,7 +71,7 @@ export function BookingModal({ siteId, slot, price, onClose }: BookingModalProps
           Advertise directly on {typeof window !== "undefined" ? window.location.hostname : "this site"}.
         </h2>
         <p className="adkit-modal-subhead">
-          Rent this ad space for a fixed price and reach your target audience where they really are: <strong>right here</strong>.
+          Rent this ad space for a fixed price. Your ad will be reviewed by the site owner before going live.
         </p>
 
         <ul className="adkit-modal-bullets">
@@ -82,10 +82,12 @@ export function BookingModal({ siteId, slot, price, onClose }: BookingModalProps
           <li>Guaranteed to display 24/7 or your money back</li>
         </ul>
 
-        <div className="adkit-modal-price-section">
-          <span className="adkit-modal-price">{formatted} / day</span>
-          <span className="adkit-modal-price-helper">Zero commitment. No minimum booking period.</span>
-        </div>
+        {formatted != null && (
+          <div className="adkit-modal-price-section">
+            <span className="adkit-modal-price">{formatted} / day</span>
+            <span className="adkit-modal-price-helper">Zero commitment. No minimum booking period.</span>
+          </div>
+        )}
 
         <div className="adkit-modal-actions">
           <button className="adkit-modal-cta" onClick={handleBook}>

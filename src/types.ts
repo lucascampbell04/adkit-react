@@ -63,3 +63,14 @@ export type AdSlotProps = {
   /** Disable all event tracking */
   silent?: boolean
 }
+
+/** Response from the /api/serve endpoint */
+export type ServeResponse =
+  | { status: "active"; bookingId: string; imageUrl: string; linkUrl: string; expiresAt?: string }
+  | { status: "empty"; price?: number; aspectRatio?: string }
+
+/** Internal state for the ad serving lifecycle */
+export type ServedAd =
+  | { status: "active"; bookingId?: string; imageUrl: string; linkUrl: string }
+  | { status: "empty"; price?: number }
+  | { status: "loading" }

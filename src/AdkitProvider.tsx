@@ -10,12 +10,12 @@ export type AdkitProviderProps = {
 }
 
 export function AdkitProvider({ siteId, children }: AdkitProviderProps) {
-  // Track registered slots for duplicate detection
   const slotsRef = React.useRef<Set<string>>(new Set())
+  const [refreshKey, setRefreshKey] = React.useState(0)
 
   const registerSlot = React.useCallback((identity: string): boolean => {
     if (slotsRef.current.has(identity)) {
-      return false // duplicate
+      return false
     }
     slotsRef.current.add(identity)
     return true
@@ -25,9 +25,14 @@ export function AdkitProvider({ siteId, children }: AdkitProviderProps) {
     slotsRef.current.delete(identity)
   }, [])
 
+  const refresh = React.useCallback(() => {
+    slotsRef.current.clear()
+    setRefreshKey(k => k + 1)
+  }, [])
+
   const value = React.useMemo(
-    () => ({ siteId, registerSlot, unregisterSlot }),
-    [siteId, registerSlot, unregisterSlot]
+    () => ({ siteId, refreshKey, refresh, registerSlot, unregisterSlot }),
+    [siteId, refreshKey, refresh, registerSlot, unregisterSlot]
   )
 
   return (
