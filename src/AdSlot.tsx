@@ -234,8 +234,8 @@ export function AdSlot({
       : (isDark ? "rgba(255,255,255,0.38)" : "rgba(0,0,0,0.2)")
   } as React.CSSProperties
 
-  const displayPrice = servedAd.status === "empty" && servedAd.price != null
-    ? servedAd.price
+  const displayPrice = servedAd.status === "empty"
+    ? (servedAd.price ?? price)
     : servedAd.status === "loading"
       ? price
       : undefined

@@ -48,7 +48,7 @@ export type AdSlotProps = {
    * Determines the type/format of ad that will be displayed.
    */
   aspectRatio: AspectRatio
-  /** Daily rental price in cents (e.g. 2500 = $25.00) */
+  /** Loading-state hint only. Server price overrides on response. In cents (e.g. 2500 = $25.00) */
   price?: number
 
   /** Size variant for the placeholder content */
