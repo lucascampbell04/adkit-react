@@ -58,7 +58,7 @@ Renders an ad placement. When no ad is booked, displays a placeholder inviting v
 | `slot` | `string` | — | **Required.** Unique slot name (letters, numbers, hyphens, underscores) |
 | `aspectRatio` | `AspectRatio` | — | **Required.** `"16:9"` \| `"4:3"` \| `"1:1"` \| `"9:16"` \| `"banner"` |
 | `siteId` | `string` | — | Manual override (not needed inside `AdkitProvider`) |
-| `price` | `number` | — | Loading-state hint only. Server price always takes precedence. |
+| `price` | `number` | — | Daily price in cents. Sets the slot price when first detected. |
 | `size` | `"sm"` \| `"md"` \| `"lg"` | `"lg"` | Placeholder content size |
 | `theme` | `"light"` \| `"dark"` \| `"auto"` | `"auto"` | Color theme (`"auto"` follows system) |
 | `className` | `string` | — | Additional CSS classes |
@@ -71,11 +71,16 @@ Exported for advanced use cases. Normally opened automatically when a visitor cl
 
 ## Pricing
 
-**Prices are server-authoritative.** The `price` prop is only a loading-state hint — the actual price displayed to advertisers always comes from the Adkit API. This means:
+**Set prices directly in your code.** The `price` prop sets your slot's price when first detected by the server. The slot becomes immediately bookable.
 
-- Your prices can't be tampered with via browser dev tools
-- You can update prices in your dashboard without redeploying
-- Billing is always based on your configured price, never client-side values
+```tsx
+<AdSlot slot="sidebar" aspectRatio="4:3" price={2500} />  // $25/day
+```
+
+- **Price increases** apply automatically on the next page load
+- **Price decreases** require confirmation via email or dashboard notification (prevents tampering)
+- You can also change prices in the dashboard if you prefer
+- Billing always uses the confirmed database price
 
 ## Types
 

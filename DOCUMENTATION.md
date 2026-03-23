@@ -17,7 +17,7 @@ React SDK for Adkit ad slots. Drop-in components for selling direct, bookable ad
 - [Styling](#styling)
 - [Events & Analytics](#events--analytics)
 - [Architecture](#architecture)
-- [Server-Authoritative Pricing](#server-authoritative-pricing)
+- [Code-Driven Pricing](#code-driven-pricing)
 - [Error Handling](#error-handling)
 - [Examples](#examples)
 - [Browser Support](#browser-support)
@@ -33,7 +33,7 @@ React SDK for Adkit ad slots. Drop-in components for selling direct, bookable ad
 
 - **React-native** — Built with React hooks and context, works with React 17+
 - **Next.js compatible** — Includes `"use client"` directives for App Router
-- **Server-authoritative pricing** — Prices come from the Adkit API, not client props
+- **Code-driven pricing** — Set prices in code, changes sync to the server automatically
 - **Theme support** — Light, dark, or auto (follows system preference)
 - **Custom styling** — Override placeholder colors via props
 - **Analytics** — Tracks mount, view, and click events
@@ -156,7 +156,7 @@ import { AdSlot } from "adkit-react"
 | `slot` | `string` | — | **Required.** Unique slot name. Only letters, numbers, hyphens, and underscores allowed. |
 | `aspectRatio` | `AspectRatio` | — | **Required.** `"16:9"` \| `"4:3"` \| `"1:1"` \| `"9:16"` \| `"banner"` |
 | `siteId` | `string` | — | Manual override. Not needed inside `<AdkitProvider>`. |
-| `price` | `number` | — | **Loading-state hint only.** Shown while fetching. Server price overrides on response. |
+| `price` | `number` | — | Daily price in cents (e.g., 2500 = $25.00/day). Sets the slot price when first detected. Price increases apply immediately. Price decreases require confirmation. |
 | `size` | `"sm"` \| `"md"` \| `"lg"` | `"lg"` | Placeholder text size variant |
 | `theme` | `"light"` \| `"dark"` \| `"auto"` | `"auto"` | Color theme. `"auto"` follows system preference. |
 | `className` | `string` | — | Additional CSS classes for width control |
@@ -607,7 +607,7 @@ Sent once when a slot is first initialized (per page load).
 }
 ```
 
-Note: `price` is only present if the `price` prop was set. This comes from the prop (not server) because the event fires before the fetch completes. The backend uses this to auto-create unconfirmed slot records.
+Note: `price` is only present if the `price` prop was set. The backend uses this to set the slot price — new slots are created at this price and become immediately bookable. Price increases apply automatically; price decreases require publisher confirmation.
 
 #### slot_view
 
@@ -737,43 +737,60 @@ GET https://adkit.dev/api/serve?slotId={siteId}:{slot}
 
 ---
 
-## Server-Authoritative Pricing
+## Code-Driven Pricing
 
-**The serve API is the single source of truth for slot data.** The SDK never uses client-side props for any value that affects billing or booking.
+Set and manage your slot prices directly in code — no dashboard required.
 
-### Why This Matters
+### Setting Prices in Code
 
-Your ad prices can't be tampered with. Even if someone opens browser dev tools and changes the `price` prop to `1` (one cent), it won't affect what advertisers actually pay. The booking page fetches the real price from your database — the client-side value is just a loading hint.
+```tsx
+// Set your slot price directly in code
+<AdSlot slot="sidebar" aspectRatio="4:3" price={2500} />
 
-This protects you from:
-- Malicious users trying to book ads at fake prices
-- Bugs where different SDK versions show different prices
-- Stale prices after you update them in the dashboard
+// The first time the SDK mounts, it registers this slot at $25/day
+// Change it in your code and redeploy — increases apply instantly
+<AdSlot slot="sidebar" aspectRatio="4:3" price={3500} />
+
+// Price decreases require confirmation via email or dashboard notification
+<AdSlot slot="sidebar" aspectRatio="4:3" price={1500} />
+```
 
 ### How Pricing Works
 
-1. The `price` prop is an **optional loading-state hint only**. If provided, it's shown in the placeholder while the serve API fetch is in-flight.
+1. **Set `price` in your code.** The first time the SDK mounts on a new slot, it registers the slot at that price. The slot is immediately bookable.
 
-2. The moment the serve response arrives, the server's `price` value replaces whatever the prop said.
+2. **To increase the price**, change it in your code and redeploy. The increase applies automatically on the next page load.
 
-3. If the server returns `status: "empty"` without a `price`, no price is shown.
+3. **To decrease the price**, change it in your code and redeploy. You'll receive an email and dashboard notification to confirm the decrease. This protects against unauthorized changes.
 
-4. The booking modal displays the **server-returned price**, not the prop price.
+4. **The booking page always charges the database price** (which matches your code-declared price after sync).
 
-5. The booking redirect URL does NOT include a price parameter:
-   ```
-   https://adkit.dev/book?siteId={siteId}&slot={slot}&ref={currentUrl}
-   ```
-   The booking page fetches the price from the database server-side.
+5. **You can also change prices in the dashboard.** Dashboard changes take effect immediately regardless of direction.
 
-6. The `slot_mount` event payload includes `price` if the prop is present (for auto-slot-creation on the backend), but this price is never used for billing — it's only a suggestion for the publisher to confirm in the dashboard.
+### Why Decreases Require Confirmation
 
-### Why Server-Authoritative?
+Price decreases require confirmation to protect against tampering. If someone opens browser dev tools and changes the `price` prop to `1` (one cent), they can't actually lower your price — you'll receive a notification asking you to confirm the change.
 
-- Prevents price tampering via browser dev tools
-- Ensures consistent pricing across all SDK versions
-- Allows publishers to update prices without redeploying
-- Single source of truth for billing
+This protects you from:
+- Malicious visitors trying to lower prices via devtools
+- Accidental price decreases from code bugs
+
+Price increases don't need protection because:
+- You benefit from higher prices
+- An attacker gains nothing by increasing your prices
+
+### Slots Without Prices
+
+If you don't set a `price` prop, the slot is created but not bookable. You'll need to set a price either:
+- By adding the `price` prop to your code
+- By setting the price in the dashboard
+
+### Server-Side Billing
+
+While prices are set from your code, billing is always server-authoritative:
+- The booking page fetches the price from the database
+- The booking redirect URL does NOT include a price parameter
+- Advertisers always pay the confirmed database price
 
 ---
 
@@ -829,13 +846,13 @@ If an active ad's image fails to load (broken URL, CDN down), the `onError` hand
 </AdkitProvider>
 ```
 
-### With Price Hint
+### With Price
 
 ```tsx
 <AdSlot
   slot="premium-banner"
   aspectRatio="banner"
-  price={10000}  // $100/day shown during loading
+  price={10000}  // $100/day — sets the slot price
 />
 ```
 
