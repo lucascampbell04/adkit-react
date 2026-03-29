@@ -9,9 +9,9 @@ A drop-in React component for selling direct, bookable ad space on your site —
 
 ---
 
-## What This Does
+## Overview
 
-Add `<AdkitProvider>` and `<AdSlot>` to your app. Each slot either renders a paid advertiser's creative or a "Rent this spot" placeholder that lets visitors book directly from your page. You set a flat daily price. Adkit handles the booking flow, payment, and approval process.
+Add `<AdkitProvider>` and `<AdSlot>` to your app. Each slot either renders a paid advertiser's creative or a "Rent this spot" placeholder that lets visitors book ads directly on your page. You set a flat daily price, and Adkit handles the booking flow, payment, and approval process, allowing you to monetize your site effortlessly.
 
 ---
 
@@ -23,7 +23,7 @@ npm install adkit-react
 
 ---
 
-## Quick Start
+## Quick start
 
 ```tsx
 import { AdkitProvider, AdSlot } from "adkit-react"
