@@ -26,8 +26,6 @@ export type AdSlotStyles = {
   textColorPrimary?: string
   /** Secondary text color for placeholder (label, subtext) */
   textColorSecondary?: string
-  /** Button background color on hover (placeholder only) */
-  buttonColor?: string
 }
 
 export type AdSlotProps = {

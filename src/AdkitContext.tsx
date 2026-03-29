@@ -8,6 +8,7 @@ export type AdkitContextValue = {
   refresh: () => void
   registerSlot: (identity: string) => boolean
   unregisterSlot: (identity: string) => void
+  mountedSlots: Set<string>
 }
 
 export const AdkitContext = React.createContext<AdkitContextValue | null>(null)

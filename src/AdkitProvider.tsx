@@ -11,6 +11,7 @@ export type AdkitProviderProps = {
 
 export function AdkitProvider({ siteId, children }: AdkitProviderProps) {
   const slotsRef = React.useRef<Set<string>>(new Set())
+  const mountedSlotsRef = React.useRef<Set<string>>(new Set())
   const [refreshKey, setRefreshKey] = React.useState(0)
 
   const registerSlot = React.useCallback((identity: string): boolean => {
@@ -27,11 +28,12 @@ export function AdkitProvider({ siteId, children }: AdkitProviderProps) {
 
   const refresh = React.useCallback(() => {
     slotsRef.current.clear()
+    mountedSlotsRef.current.clear()
     setRefreshKey(k => k + 1)
   }, [])
 
   const value = React.useMemo(
-    () => ({ siteId, refreshKey, refresh, registerSlot, unregisterSlot }),
+    () => ({ siteId, refreshKey, refresh, registerSlot, unregisterSlot, mountedSlots: mountedSlotsRef.current }),
     [siteId, refreshKey, refresh, registerSlot, unregisterSlot]
   )
 

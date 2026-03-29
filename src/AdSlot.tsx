@@ -22,7 +22,6 @@ const RATIO_VALUE: Record<string, number> = {
   "banner": 728 / 90
 }
 
-const mountedSlots = new Set<string>()
 const SERVE_BASE = "https://adkit.dev"
 const FETCH_TIMEOUT_MS = 5000
 
@@ -63,12 +62,14 @@ export function AdSlot({
 
   // Validate aspectRatio
   if (!aspectRatio) {
-    throw new Error("[Adkit] Missing aspectRatio. This prop is required and determines the ad format.")
+    console.error("[Adkit] Missing aspectRatio. This prop is required and determines the ad format.")
+    return null
   }
 
   // Validate slot name
   if (!/^[A-Za-z0-9_-]+$/.test(slot)) {
-    throw new Error(`[Adkit] Invalid slot name "${slot}". Only letters, numbers, hyphens, and underscores allowed.`)
+    console.error(`[Adkit] Invalid slot name "${slot}". Only letters, numbers, hyphens, and underscores allowed.`)
+    return null
   }
 
   const ctx = React.useContext(AdkitContext)
@@ -95,8 +96,11 @@ export function AdSlot({
   }, [ctx, siteId, slotIdentity, slot, silent])
 
   React.useEffect(() => {
-    if (silent || mountedSlots.has(slotIdentity)) return
-    mountedSlots.add(slotIdentity)
+    if (silent) return
+    if (ctx?.mountedSlots && ctx.mountedSlots.has(slotIdentity)) return
+    if (ctx?.mountedSlots) {
+      ctx.mountedSlots.add(slotIdentity)
+    }
     const payload: Parameters<typeof sendEvent>[0] = {
       type: "slot_mount",
       siteId,
@@ -106,7 +110,7 @@ export function AdSlot({
     }
     if (price != null) payload.price = price
     sendEvent(payload)
-  }, [siteId, slotIdentity, slot, silent, price, aspectRatio])
+  }, [siteId, slotIdentity, slot, silent, price, aspectRatio, ctx])
 
   React.useEffect(() => {
     setServedAd({ status: "loading" })
