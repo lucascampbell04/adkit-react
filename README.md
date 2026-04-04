@@ -124,7 +124,7 @@ Renders a single ad placement. Fetches its status from the Adkit API and renders
 |---|---|---|---|
 | `slot` | `string` | — | **Required.** Unique placement name. Letters, numbers, hyphens, underscores only. |
 | `aspectRatio` | `AspectRatio` | — | **Required.** Slot shape — see [Aspect Ratios](#aspect-ratios). |
-| `price` | `number` | — | Daily price in cents (e.g. `2500` = $25/day). See [Pricing](#pricing). |
+| `price` | `number` | — | **Required.** Daily price in cents (e.g. `2500` = $25/day). See [Pricing](#pricing). |
 | `siteId` | `string` | — | Manual site ID override. Not needed inside `<AdkitProvider>`. |
 | `size` | `"sm" \| "md" \| "lg"` | `"lg"` | Placeholder text size. |
 | `theme` | `"light" \| "dark" \| "auto"` | `"auto"` | Color theme. `"auto"` follows system preference. |
@@ -420,13 +420,13 @@ Fires when two `<AdSlot>` components share the same `siteId:slot` identity on th
 
 ## Error Handling
 
-The SDK logs errors with the `[Adkit]` prefix and degrades gracefully — a misconfigured slot renders `null` rather than crashing the React tree.
+The SDK throws explicit errors for developer misconfiguration so required props fail fast during development and testing.
 
 | Scenario | Behavior |
 |---|---|
-| Missing `aspectRatio` | Renders `null`, `console.error` logged |
-| Invalid `slot` name | Renders `null`, `console.error` logged |
-| Missing `siteId` (no provider, no prop) | Renders `null`, `console.error` logged |
+| Missing `slot`, `aspectRatio`, or `price` | Throws |
+| Invalid `slot` name | Throws |
+| Missing `siteId` (no provider, no prop) | Throws |
 | `useAdkit()` called outside provider | Throws — this is a developer error |
 | Duplicate slot identity | Both render, `console.warn` + analytics event |
 | API fetch timeout (5s) | Falls back to placeholder |

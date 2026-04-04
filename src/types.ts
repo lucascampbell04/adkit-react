@@ -51,7 +51,7 @@ export type AdSlotProps = {
    * Sets the slot price when first detected. Price increases apply immediately.
    * Price decreases require confirmation in the dashboard.
    */
-  price?: number
+  price: number
 
   /** Size variant for the placeholder content */
   size?: "sm" | "md" | "lg"

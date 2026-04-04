@@ -25,6 +25,13 @@ const RATIO_VALUE: Record<string, number> = {
 const SERVE_BASE = "https://adkit.dev"
 const FETCH_TIMEOUT_MS = 5000
 
+function assertRequiredProp<T>(propName: string, value: T | null | undefined): T {
+  if (value == null) {
+    throw new Error(`[Adkit] Missing ${propName}. This prop is required.`)
+  }
+  return value
+}
+
 function useSystemDark() {
   const [isDark, setIsDark] = React.useState(false)
 
@@ -50,6 +57,10 @@ export function AdSlot({
   styles,
   silent = false
 }: AdSlotProps) {
+  const requiredSlot = assertRequiredProp("slot", slot)
+  const requiredAspectRatio = assertRequiredProp("aspectRatio", aspectRatio)
+  const requiredPrice = assertRequiredProp("price", price)
+
   const slotRef = React.useRef<HTMLDivElement>(null)
   const hasViewedRef = React.useRef(false)
   const bookingIdRef = React.useRef<string | undefined>(undefined)
@@ -60,16 +71,9 @@ export function AdSlot({
     bookingIdRef.current = servedAd.status === "active" ? servedAd.bookingId : undefined
   }, [servedAd])
 
-  // Validate aspectRatio
-  if (!aspectRatio) {
-    console.error("[Adkit] Missing aspectRatio. This prop is required and determines the ad format.")
-    return null
-  }
-
   // Validate slot name
-  if (!/^[A-Za-z0-9_-]+$/.test(slot)) {
-    console.error(`[Adkit] Invalid slot name "${slot}". Only letters, numbers, hyphens, and underscores allowed.`)
-    return null
+  if (!/^[A-Za-z0-9_-]+$/.test(requiredSlot)) {
+    throw new Error(`[Adkit] Invalid slot name "${requiredSlot}". Only letters, numbers, hyphens, and underscores allowed.`)
   }
 
   const ctx = React.useContext(AdkitContext)
@@ -80,8 +84,8 @@ export function AdSlot({
     throw new Error('[Adkit] Missing siteId. Either wrap your app with <AdkitProvider siteId="..."> or pass siteId directly.')
   }
 
-  const slotIdentity = deriveSlotIdentity(siteId, slot)
-  const expectedRatio = RATIO_VALUE[aspectRatio]
+  const slotIdentity = deriveSlotIdentity(siteId, requiredSlot)
+  const expectedRatio = RATIO_VALUE[requiredAspectRatio]
 
   React.useEffect(() => {
     if (!ctx) return
@@ -89,11 +93,11 @@ export function AdSlot({
     if (!isUnique) {
       console.warn(`[Adkit] Duplicate slot "${slot}" detected on this page.`)
       if (!silent) {
-        sendEvent({ type: "slot_duplicate", siteId, slot, pathname: window.location.pathname })
+        sendEvent({ type: "slot_duplicate", siteId, slot: requiredSlot, pathname: window.location.pathname })
       }
     }
     return () => ctx.unregisterSlot(slotIdentity)
-  }, [ctx, siteId, slotIdentity, slot, silent])
+  }, [ctx, siteId, slotIdentity, requiredSlot, silent])
 
   React.useEffect(() => {
     if (silent) return
@@ -104,13 +108,13 @@ export function AdSlot({
     const payload: Parameters<typeof sendEvent>[0] = {
       type: "slot_mount",
       siteId,
-      slot,
+      slot: requiredSlot,
       pathname: typeof window !== "undefined" ? window.location.pathname : "",
-      aspectRatio
+      aspectRatio: requiredAspectRatio
     }
-    if (price != null) payload.price = price
+    payload.price = requiredPrice
     sendEvent(payload)
-  }, [siteId, slotIdentity, slot, silent, price, aspectRatio, ctx])
+  }, [siteId, slotIdentity, requiredSlot, silent, requiredPrice, requiredAspectRatio, ctx])
 
   React.useEffect(() => {
     setServedAd({ status: "loading" })
@@ -173,7 +177,7 @@ export function AdSlot({
     )
     observer.observe(el)
     return () => observer.disconnect()
-  }, [slotIdentity, siteId, slot, silent])
+  }, [slotIdentity, siteId, requiredSlot, silent])
 
   // Aspect ratio validation
   React.useEffect(() => {
@@ -225,7 +229,7 @@ export function AdSlot({
   const isDark = theme === "dark" ? true : theme === "light" ? false : systemDark
 
   const styleVars: React.CSSProperties = {
-    "--adkit-aspect": RATIO_CSS[aspectRatio],
+    "--adkit-aspect": RATIO_CSS[requiredAspectRatio],
     "--adkit-bg": styles?.backgroundColor ?? "transparent",
     "--adkit-text-muted": styles?.textColorSecondary ?? (isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.6)"),
     "--adkit-text": styles?.textColorSecondary ?? (isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.5)"),
@@ -239,9 +243,9 @@ export function AdSlot({
   } as React.CSSProperties
 
   const displayPrice = servedAd.status === "empty"
-    ? (servedAd.price ?? price)
+    ? (servedAd.price ?? requiredPrice)
     : servedAd.status === "loading"
-      ? price
+      ? requiredPrice
       : undefined
 
   const formattedPrice = displayPrice != null
@@ -253,7 +257,7 @@ export function AdSlot({
       })()
     : null
 
-  const isBanner = aspectRatio === "banner"
+  const isBanner = requiredAspectRatio === "banner"
   const isActive = servedAd.status === "active"
   const isLoading = servedAd.status === "loading"
 
@@ -264,14 +268,14 @@ export function AdSlot({
         className={`adkit-slot ${className ? className : "adkit-slot--default-width"}`}
         style={styleVars}
         data-adkit-site={siteId}
-        data-adkit-slot={slot}
-        data-adkit-ratio={aspectRatio}
+        data-adkit-slot={requiredSlot}
+        data-adkit-ratio={requiredAspectRatio}
         data-adkit-size={size}
       >
         <div className="adkit-canvas">
           {isActive ? (
             <a
-              id={slot}
+              id={requiredSlot}
               href={servedAd.linkUrl}
               target="_blank"
               rel="noopener noreferrer"
@@ -287,7 +291,7 @@ export function AdSlot({
             </a>
           ) : (
             <div
-              id={`${slot}-placeholder`}
+              id={`${requiredSlot}-placeholder`}
               className="adkit-box"
               role="button"
               tabIndex={0}
@@ -316,7 +320,7 @@ export function AdSlot({
       {!isActive && !isLoading && modalOpen && (
         <BookingModal
           siteId={siteId}
-          slot={slot}
+          slot={requiredSlot}
           price={displayPrice}
           onClose={() => setModalOpen(false)}
         />
