@@ -1,12 +1,15 @@
 "use client"
 
 import * as React from "react"
+import { createPortal } from "react-dom"
 
 /**
  * BookingModal
  *
  * This modal is informational only. It exists to build trust with the visitor
  * before redirecting them to adkit.dev where the actual booking flow lives.
+ *
+ * Rendered via portal to document.body to avoid stacking context issues.
  */
 
 type BookingModalProps = {
@@ -19,6 +22,11 @@ type BookingModalProps = {
 
 export function BookingModal({ siteId, slot, price, onClose }: BookingModalProps) {
   const overlayRef = React.useRef<HTMLDivElement>(null)
+  const [mounted, setMounted] = React.useState(false)
+
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Close on Escape
   React.useEffect(() => {
@@ -57,7 +65,7 @@ export function BookingModal({ siteId, slot, price, onClose }: BookingModalProps
     window.location.href = `https://adkit.dev/book?${params.toString()}`
   }
 
-  return (
+  const modalContent = (
     <div
       ref={overlayRef}
       className="adkit-modal-overlay"
@@ -105,4 +113,7 @@ export function BookingModal({ siteId, slot, price, onClose }: BookingModalProps
       </div>
     </div>
   )
+
+  if (!mounted) return null
+  return createPortal(modalContent, document.body)
 }
